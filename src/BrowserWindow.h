@@ -3,7 +3,9 @@
 #include <QMainWindow>
 #include <QUrl>
 
+class ClaudePanel;
 class FindBar;
+class QHBoxLayout;
 class QLabel;
 class QMenu;
 class QProgressBar;
@@ -38,6 +40,9 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
@@ -71,6 +76,8 @@ private:
     void savePage();
     void clearBrowsingData();
     void showAbout();
+    void placeTrafficLights();
+    void updateTopBarInset();
 
     bool m_orbit;
     QWebEngineProfile *m_profile;
@@ -92,6 +99,10 @@ private:
     QProgressBar *m_progress = nullptr;
     QLabel *m_statusBubble = nullptr;
     FindBar *m_findBar = nullptr;
+    ClaudePanel *m_claude = nullptr;
+    QToolButton *m_claudeButton = nullptr;
+    QHBoxLayout *m_topLayout = nullptr;
+    bool m_macStyled = false;
 
     QList<QUrl> m_closedTabs;
     bool m_wasMaximized = false;

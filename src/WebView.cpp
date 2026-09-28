@@ -17,7 +17,7 @@ WebView::WebView(QWebEngineProfile *profile, BrowserWindow *window)
     auto *page = new QWebEnginePage(profile, this);
     setPage(page);
     // Match the start page so new tabs never flash white.
-    page->setBackgroundColor(QColor(0x05, 0x05, 0x0a));
+    page->setBackgroundColor(QColor(Qt::black));
 
     auto *s = page->settings();
     s->setAttribute(QWebEngineSettings::FullScreenSupportEnabled, true);
@@ -38,7 +38,7 @@ WebView::WebView(QWebEngineProfile *profile, BrowserWindow *window)
     connect(this, &QWebEngineView::urlChanged, this, [this](const QUrl &url) {
         // Built-in pages are dark; everything else gets the web's default white canvas.
         this->page()->setBackgroundColor(url.scheme() == QLatin1String("kepler") || url.isEmpty()
-                                             ? QColor(0x05, 0x05, 0x0a)
+                                             ? QColor(Qt::black)
                                              : QColor(Qt::white));
     });
 

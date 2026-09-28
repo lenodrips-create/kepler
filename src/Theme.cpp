@@ -113,6 +113,39 @@ QToolButton::menu-indicator {
     font-weight: 600;
     padding: 5px 8px;
 }
+#ClaudeButton {
+    color: #fcd9c4;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 11px 5px 8px;
+    border: 1px solid #3a2a2a;
+    border-radius: 14px;
+}
+#ClaudeButton:hover {
+    background: #2a1d1c;
+    border-color: #6b3f33;
+}
+#ClaudeButton:checked {
+    background: #3a2320;
+    border-color: #e8795a;
+    color: #ffffff;
+}
+#ClaudePanel {
+    background: #12121c;
+    border: 1px solid #2f2f48;
+    border-radius: 14px;
+}
+#ClaudeHeader {
+    background: #12121c;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    border-bottom: 1px solid #23233a;
+}
+#ClaudeTitle {
+    color: #f5f5ff;
+    font-size: 14px;
+    font-weight: 700;
+}
 #OrbitBadge {
     color: #f5d0fe;
     background: #2a1238;

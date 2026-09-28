@@ -1,8 +1,10 @@
 #include "BrowserWindow.h"
 
 #include "Browser.h"
+#include "ClaudePanel.h"
 #include "DownloadsPanel.h"
 #include "FindBar.h"
+#include "MacWindow.h"
 #include "Shields.h"
 #include "Storage.h"
 #include "Theme.h"
@@ -28,7 +30,9 @@
 #include <QTabBar>
 #include <QToolBar>
 #include <QToolButton>
+#include <QTimer>
 #include <QVBoxLayout>
+#include <QWindow>
 #include <QWebEngineCookieStore>
 #include <QWebEngineDownloadRequest>
 #include <QWebEngineFullScreenRequest>
@@ -106,7 +110,7 @@ BrowserWindow::~BrowserWindow()
 {
     // Every page (including tabs already closed but not yet deleted) must go
     // before an Orbit profile is destroyed.
-    const auto views = m_stack->findChildren<WebView *>();
+    const auto views = findChildren<WebView *>();
     qDeleteAll(views);
     if (m_orbit)
         delete m_profile;
@@ -126,7 +130,9 @@ void BrowserWindow::buildUi()
     m_topBar = new QWidget(central);
     m_topBar->setObjectName("TopBar");
     auto *top = new QHBoxLayout(m_topBar);
+    m_topLayout = top;
     top->setContentsMargins(6, 0, 10, 0);
+    m_topBar->installEventFilter(this);
     top->setSpacing(2);
 
     auto *brand = new QLabel(m_topBar);
@@ -194,6 +200,11 @@ void BrowserWindow::buildUi()
     m_shields = toolButton(m_navBar, "shield", tr("Shields"));
     m_shields->setObjectName("ShieldButton");
     m_shields->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_claudeButton = toolButton(m_navBar, "sparkle", tr("Ask Claude (Ctrl+Shift+Space)"));
+    m_claudeButton->setObjectName("ClaudeButton");
+    m_claudeButton->setText(tr("Claude"));
+    m_claudeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_claudeButton->setCheckable(true);
     m_downloadsButton = toolButton(m_navBar, "download", tr("Downloads (Ctrl+J)"));
     auto *menuButton = toolButton(m_navBar, "menu", tr("Menu"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
@@ -207,6 +218,7 @@ void BrowserWindow::buildUi()
     nav->addWidget(m_urlBar, 1);
     nav->addWidget(m_zoom);
     nav->addSpacing(4);
+    nav->addWidget(m_claudeButton);
     nav->addWidget(m_shields);
     nav->addWidget(m_downloadsButton);
     nav->addWidget(menuButton);
@@ -240,6 +252,7 @@ void BrowserWindow::buildUi()
     m_statusBubble->hide();
 
     m_findBar = new FindBar(m_content);
+    m_claude = new ClaudePanel(m_profile, this, m_content);
 
     root->addWidget(m_topBar);
     root->addWidget(m_navBar);
@@ -276,6 +289,8 @@ void BrowserWindow::buildUi()
     connect(m_zoom, &QToolButton::clicked, this, [this] { setZoom(1.0); });
     connect(m_shields, &QToolButton::clicked, this, &BrowserWindow::showShieldsMenu);
     connect(m_downloadsButton, &QToolButton::clicked, this, &BrowserWindow::showDownloads);
+    connect(m_claudeButton, &QToolButton::clicked, m_claude, &ClaudePanel::toggle);
+    connect(m_claude, &ClaudePanel::openChanged, m_claudeButton, &QToolButton::setChecked);
 }
 
 void BrowserWindow::buildActions()
@@ -339,6 +354,7 @@ void BrowserWindow::buildActions()
                 if (ZoomSteps[i] < v->zoomFactor() - 0.001) { setZoom(ZoomSteps[i]); break; }
     });
     add({QKeySequence(Qt::CTRL | Qt::Key_0)}, [this] { setZoom(1.0); });
+    add({QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Space)}, [this] { m_claude->toggle(); });
 }
 
 QMenu *BrowserWindow::buildMainMenu()
@@ -795,6 +811,8 @@ void BrowserWindow::handleFullScreen(QWebEngineFullScreenRequest request)
 {
     request.accept();
     const bool on = request.toggleOn();
+    if (on)
+        m_claude->hidePanel();
     m_topBar->setVisible(!on);
     m_navBar->setVisible(!on);
     m_progress->setVisible(!on);
@@ -813,6 +831,7 @@ void BrowserWindow::positionOverlays()
         m_statusBubble->move(8, r.height() - m_statusBubble->height() - 8);
     m_findBar->adjustSize();
     m_findBar->move(r.width() - m_findBar->width() - 18, 12);
+    m_claude->reposition();
 }
 
 // ------------------------------------------------------------------- extras
@@ -914,6 +933,19 @@ bool BrowserWindow::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == m_content && event->type() == QEvent::Resize) {
         positionOverlays();
+#ifdef Q_OS_MACOS
+    } else if ((watched == m_topBar || watched == m_tabBar) && event->type() == QEvent::MouseButtonPress) {
+        // The title bar is gone on Mac, so the top bar's empty space drags the window.
+        auto *me = static_cast<QMouseEvent *>(event);
+        const bool emptySpot = watched == m_topBar || m_tabBar->tabAt(me->position().toPoint()) < 0;
+        if (me->button() == Qt::LeftButton && emptySpot && windowHandle()) {
+            windowHandle()->startSystemMove();
+            return true;
+        }
+    } else if (watched == m_topBar && event->type() == QEvent::MouseButtonDblClick) {
+        isMaximized() ? showNormal() : showMaximized();
+        return true;
+#endif
     } else if (watched == m_tabBar && event->type() == QEvent::MouseButtonRelease) {
         auto *me = static_cast<QMouseEvent *>(event);
         if (me->button() == Qt::MiddleButton) {
@@ -930,4 +962,57 @@ bool BrowserWindow::eventFilter(QObject *watched, QEvent *event)
         }
     }
     return QMainWindow::eventFilter(watched, event);
+}
+
+// --------------------------------------------------------------- macOS chrome
+
+void BrowserWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+#ifdef Q_OS_MACOS
+    if (!m_macStyled) {
+        m_macStyled = true;
+        MacWindow::setup(this);
+        updateTopBarInset();
+    }
+    QTimer::singleShot(0, this, &BrowserWindow::placeTrafficLights);
+#endif
+}
+
+void BrowserWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    placeTrafficLights();
+}
+
+void BrowserWindow::changeEvent(QEvent *event)
+{
+    QMainWindow::changeEvent(event);
+#ifdef Q_OS_MACOS
+    if (event->type() == QEvent::WindowStateChange || event->type() == QEvent::ActivationChange) {
+        // Mac animates into and out of full screen; settle before re-placing.
+        QTimer::singleShot(0, this, &BrowserWindow::placeTrafficLights);
+        QTimer::singleShot(400, this, [this] {
+            updateTopBarInset();
+            placeTrafficLights();
+        });
+    }
+#endif
+}
+
+void BrowserWindow::updateTopBarInset()
+{
+#ifdef Q_OS_MACOS
+    // Leave room for the red/yellow/green buttons, except in full screen where they hide.
+    const bool fullScreen = isFullScreen() || MacWindow::isNativeFullScreen(this);
+    m_topLayout->setContentsMargins(fullScreen ? 6 : MacWindow::TrafficLightsInset, 0, 10, 0);
+#endif
+}
+
+void BrowserWindow::placeTrafficLights()
+{
+#ifdef Q_OS_MACOS
+    if (m_macStyled && m_topBar->isVisible())
+        MacWindow::placeTrafficLights(this, 16, m_topBar->height());
+#endif
 }

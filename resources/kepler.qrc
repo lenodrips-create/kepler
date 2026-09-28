@@ -10,6 +10,7 @@
     <file>icons/close-small.svg</file>
     <file>icons/download-active.svg</file>
     <file>icons/download.svg</file>
+    <file>icons/external.svg</file>
     <file>icons/folder.svg</file>
     <file>icons/forward.svg</file>
     <file>icons/globe.svg</file>
@@ -25,6 +26,7 @@
     <file>icons/shield.svg</file>
     <file>icons/star-filled.svg</file>
     <file>icons/star.svg</file>
+    <file>icons/sparkle.svg</file>
     <file>icons/speaker-muted.svg</file>
     <file>icons/speaker.svg</file>
     <file>icons/stop.svg</file>
