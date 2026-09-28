@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Kepler VERSION 1.0.0 DESCRIPTION "Kepler - a web browser from another orbit" LANGUAGES CXX)
+project(Kepler VERSION 1.1.0 DESCRIPTION "Kepler - a web browser from another orbit" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets WebEngineCore WebEngineWidgets Svg)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network WebEngineCore WebEngineWidgets Svg)
 
 set(KEPLER_SOURCES
     src/main.cpp
@@ -17,6 +17,7 @@ set(KEPLER_SOURCES
     src/BrowserWindow.cpp      src/BrowserWindow.h
     src/WebView.cpp            src/WebView.h
     src/UrlBar.cpp             src/UrlBar.h
+    src/Favicons.cpp           src/Favicons.h
     src/FindBar.cpp            src/FindBar.h
     src/DownloadsPanel.cpp     src/DownloadsPanel.h
     src/Storage.cpp            src/Storage.h
@@ -47,7 +48,7 @@ qt_add_executable(Kepler WIN32 MACOSX_BUNDLE ${KEPLER_SOURCES})
 
 target_compile_definitions(Kepler PRIVATE KEPLER_VERSION="${PROJECT_VERSION}")
 target_link_libraries(Kepler PRIVATE
-    Qt6::Core Qt6::Gui Qt6::Widgets
+    Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network
     Qt6::WebEngineCore Qt6::WebEngineWidgets Qt6::Svg)
 if(APPLE)
     target_link_libraries(Kepler PRIVATE "-framework AppKit")

@@ -111,6 +111,14 @@
     border-color: rgba(var(--a1rgb), 0.6);
     background: rgba(30, 26, 52, 0.7);
   }
+  .logo-orb {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: grid; place-items: center;
+    background: #ffffff;
+    box-shadow: 0 6px 18px -6px rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+  }
+  .logo-orb img { width: 32px; height: 32px; }
   .orb {
     width: 44px; height: 44px; border-radius: 50%;
     display: grid; place-items: center;
@@ -189,11 +197,19 @@ for (const t of DATA.tiles) {
   let hash = 0;
   for (const ch of t.url) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const hue = hash % 360;
+  // The site's real logo; a colored letter if it can't be fetched.
   const orb = document.createElement('div');
-  orb.className = 'orb';
-  orb.style.background = `radial-gradient(circle at 30% 25%, hsl(${hue} 90% 72%), hsl(${(hue + 40) % 360} 70% 38%))`;
-  orb.style.setProperty('--glow', `hsl(${hue} 90% 60%)`);
-  orb.textContent = (t.title || t.url).trim().charAt(0).toUpperCase();
+  orb.className = 'logo-orb';
+  const img = document.createElement('img');
+  img.alt = '';
+  img.src = t.icon;
+  img.onerror = () => {
+    orb.className = 'orb';
+    orb.style.background = `radial-gradient(circle at 30% 25%, hsl(${hue} 90% 72%), hsl(${(hue + 40) % 360} 70% 38%))`;
+    orb.style.setProperty('--glow', `hsl(${hue} 90% 60%)`);
+    orb.textContent = (t.title || t.url).trim().charAt(0).toUpperCase();
+  };
+  orb.append(img);
   const label = document.createElement('span');
   label.textContent = t.title || t.url;
   a.append(orb, label);

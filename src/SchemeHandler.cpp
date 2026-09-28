@@ -1,5 +1,6 @@
 #include "SchemeHandler.h"
 
+#include "Favicons.h"
 #include "Shields.h"
 #include "Storage.h"
 
@@ -88,7 +89,9 @@ QByteArray SchemeHandler::startPage() const
     for (const auto &b : s.bookmarks()) {
         if (tiles.size() >= 8)
             break;
-        tiles.append(QJsonObject{{"url", b.url}, {"title", b.title}});
+        tiles.append(QJsonObject{{"url", b.url},
+                                 {"title", b.title},
+                                 {"icon", Favicons::sourceFor(QUrl(b.url).host()).toString()}});
     }
     const QJsonObject data{
         {"search", s.searchTemplate()},

@@ -89,12 +89,31 @@ void Storage::load()
         m_bookmarks = {
             {"https://edudeck.tech/", "EduDeck"},
             {"https://www.youtube.com/", "YouTube"},
+            {"https://www.tiktok.com/", "TikTok"},
+            {"https://www.instagram.com/", "Instagram"},
             {"https://github.com/", "GitHub"},
             {"https://en.wikipedia.org/", "Wikipedia"},
             {"https://www.nasa.gov/", "NASA"},
             {"https://science.nasa.gov/mission/kepler/", "Kepler Mission"},
         };
         saveBookmarks();
+    }
+
+    // Kepler 1.1 added TikTok and Instagram to the defaults; give existing users them too.
+    QSettings settings;
+    if (settings.value("bookmarks/defaultsVersion", 1).toInt() < 2) {
+        const QList<Bookmark> added{{"https://www.tiktok.com/", "TikTok"},
+                                    {"https://www.instagram.com/", "Instagram"}};
+        int at = 0;
+        for (int i = 0; i < m_bookmarks.size(); ++i)
+            if (m_bookmarks[i].url == QLatin1String("https://www.youtube.com/"))
+                at = i + 1;
+        for (const Bookmark &b : added) {
+            if (!isBookmarked(QUrl(b.url)))
+                m_bookmarks.insert(at++, b);
+        }
+        saveBookmarks();
+        settings.setValue("bookmarks/defaultsVersion", 2);
     }
 }
 

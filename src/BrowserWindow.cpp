@@ -3,6 +3,7 @@
 #include "Browser.h"
 #include "ClaudePanel.h"
 #include "DownloadsPanel.h"
+#include "Favicons.h"
 #include "FindBar.h"
 #include "MacWindow.h"
 #include "Shields.h"
@@ -95,6 +96,10 @@ BrowserWindow::BrowserWindow(bool orbit)
     connect(&storage, &Storage::settingsChanged, this, [this] {
         m_bookmarksBar->setVisible(Storage::instance().bookmarksBarVisible());
         updateShields();
+    });
+    connect(&Favicons::instance(), &Favicons::iconReady, this, [this] {
+        // Several logos can land at once; rebuild once they have.
+        QTimer::singleShot(150, this, &BrowserWindow::rebuildBookmarksBar);
     });
     connect(Shields::instance(), &Shields::blocked, this, [this](const QString &site) {
         if (WebView *v = currentView(); v && v->url().host().toLower() == site)
@@ -441,7 +446,8 @@ void BrowserWindow::rebuildBookmarksBar()
     }
     for (const Bookmark &b : bookmarks) {
         const QString title = b.title.isEmpty() ? QUrl(b.url).host() : b.title;
-        auto *a = m_bookmarksBar->addAction(icon("planet"), fontMetrics().elidedText(title, Qt::ElideRight, 160));
+        auto *a = m_bookmarksBar->addAction(Favicons::instance().icon(QUrl(b.url)),
+                                            fontMetrics().elidedText(title, Qt::ElideRight, 160));
         a->setToolTip(b.url);
         const QUrl url(b.url);
         connect(a, &QAction::triggered, this, [this, url] {
