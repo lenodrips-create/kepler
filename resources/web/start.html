@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New Tab</title>
+<style>
+  :root {
+    --void: #05050a;
+    --text: #ecebff;
+    --muted: #8b8ba7;
+    --glass: rgba(20, 20, 34, 0.55);
+    --edge: rgba(255, 255, 255, 0.08);
+    --a1: #8b5cf6;
+    --a1rgb: 139, 92, 246;
+    --a2rgb: 34, 211, 238;
+    --a2: #22d3ee;
+  }
+  body.orbit { --a1: #d946ef; --a2: #8b5cf6; --a1rgb: 217, 70, 239; --a2rgb: 139, 92, 246; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: "Segoe UI", "Inter", "SF Pro Display", "Ubuntu", system-ui, sans-serif;
+    user-select: none;
+  }
+  canvas { position: fixed; inset: 0; }
+  .nebula {
+    position: fixed; inset: -20%;
+    background:
+      radial-gradient(40% 35% at 25% 25%, rgba(var(--a1rgb), 0.22), transparent 70%),
+      radial-gradient(35% 30% at 80% 75%, rgba(var(--a2rgb), 0.14), transparent 70%);
+    filter: blur(20px);
+    animation: drift 40s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from { transform: translate(-2%, -1%) rotate(0deg); }
+    to   { transform: translate(2%, 2%) rotate(6deg); }
+  }
+  main {
+    position: relative;
+    height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px 24px 72px;
+    gap: 18px;
+  }
+  .logo {
+    width: 132px; height: 132px;
+    filter: drop-shadow(0 0 18px rgba(var(--a1rgb), 0.7))
+            drop-shadow(0 0 42px rgba(var(--a2rgb), 0.35));
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50%      { transform: translateY(-10px) rotate(2deg); }
+  }
+  h1 {
+    margin: 0;
+    font-weight: 300;
+    font-size: 44px;
+    letter-spacing: 0.55em;
+    padding-left: 0.55em;
+    background: linear-gradient(90deg, #fff, #c4b5fd, var(--a2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .greeting { color: var(--muted); font-size: 15px; letter-spacing: 0.04em; margin-top: -6px; }
+  .greeting b { color: var(--text); font-weight: 600; }
+
+  form {
+    width: min(640px, 92vw);
+    margin-top: 10px;
+    position: relative;
+    border-radius: 30px;
+    padding: 1.5px;
+    background: linear-gradient(90deg, var(--edge), var(--edge));
+    transition: background .25s;
+  }
+  form:focus-within { background: linear-gradient(90deg, var(--a1), var(--a2)); box-shadow: 0 0 40px -8px var(--a1); }
+  .field {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(12, 12, 22, 0.92);
+    border-radius: 29px;
+    padding: 0 22px;
+    height: 56px;
+    backdrop-filter: blur(16px);
+  }
+  .field svg { flex: none; opacity: .7; }
+  input {
+    flex: 1; min-width: 0;
+    background: none; border: 0; outline: 0;
+    color: var(--text);
+    font: inherit; font-size: 17px;
+  }
+  input::placeholder { color: #6f6f8c; }
+  kbd {
+    font: 12px ui-monospace, monospace; color: var(--muted);
+    border: 1px solid var(--edge); border-radius: 6px; padding: 2px 7px;
+  }
+
+  .tiles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 506px;
+    gap: 14px;
+    margin-top: 22px;
+  }
+    .tile {
+    width: 112px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 16px 8px 12px;
+    border-radius: 18px;
+    background: var(--glass);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12.5px;
+    backdrop-filter: blur(12px);
+    transition: transform .18s ease, border-color .18s, background .18s;
+  }
+  .tile:hover {
+    transform: translateY(-4px);
+    border-color: rgba(var(--a1rgb), 0.6);
+    background: rgba(30, 26, 52, 0.7);
+  }
+  .orb {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 18px; color: #fff;
+    box-shadow: inset 0 -6px 12px rgba(0,0,0,.35), 0 0 18px -4px var(--glow);
+  }
+  .tile span { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  footer {
+    position: fixed; bottom: 18px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 22px;
+    color: var(--muted); font-size: 12.5px;
+  }
+  footer .pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 12px; border-radius: 99px;
+    background: var(--glass); border: 1px solid var(--edge);
+  }
+  footer .pill b { color: var(--a2); }
+  .orbit-banner {
+    display: none;
+    padding: 8px 16px; border-radius: 99px;
+    background: rgba(217, 70, 239, 0.12); border: 1px solid rgba(217, 70, 239, 0.35);
+    color: #f5d0fe; font-size: 13px;
+  }
+  body.orbit .orbit-banner { display: block; }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="nebula"></div>
+<main>
+  <img class="logo" src="kepler://assets/logo.png" alt="">
+  <h1>KEPLER</h1>
+  <div class="greeting" id="greeting"></div>
+  <div class="orbit-banner">&#x1FA90; Orbit mode &mdash; nothing you do in this window is saved</div>
+  <form id="search" autocomplete="off">
+    <div class="field">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8b8d0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+      <input id="q" spellcheck="false">
+      <kbd>/</kbd>
+    </div>
+  </form>
+  <div class="tiles" id="tiles"></div>
+</main>
+<footer>
+  <div class="pill" id="shields"></div>
+  <div class="pill" id="clock"></div>
+</footer>
+
+<script>
+const DATA = {{DATA}};
+
+if (DATA.orbit) document.body.classList.add('orbit');
+
+// ---------- search ----------
+const q = document.getElementById('q');
+q.placeholder = `Search with ${DATA.engine} or enter an address`;
+document.getElementById('search').addEventListener('submit', e => {
+  e.preventDefault();
+  const text = q.value.trim();
+  if (!text) return;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(text)) location.href = text;
+  else if (!/\s/.test(text) && /^[^.]+\.[^.]+/.test(text)) location.href = 'https://' + text;
+  else location.href = DATA.search.replace('%1', encodeURIComponent(text));
+});
+addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+});
+
+// ---------- tiles ----------
+const tiles = document.getElementById('tiles');
+for (const t of DATA.tiles) {
+  const a = document.createElement('a');
+  a.className = 'tile';
+  a.href = t.url;
+  let hash = 0;
+  for (const ch of t.url) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  const hue = hash % 360;
+  const orb = document.createElement('div');
+  orb.className = 'orb';
+  orb.style.background = `radial-gradient(circle at 30% 25%, hsl(${hue} 90% 72%), hsl(${(hue + 40) % 360} 70% 38%))`;
+  orb.style.setProperty('--glow', `hsl(${hue} 90% 60%)`);
+  orb.textContent = (t.title || t.url).trim().charAt(0).toUpperCase();
+  const label = document.createElement('span');
+  label.textContent = t.title || t.url;
+  a.append(orb, label);
+  tiles.append(a);
+}
+
+// ---------- clock & greeting ----------
+function tick() {
+  const now = new Date();
+  const h = now.getHours();
+  const part = h < 5 ? 'Stargazing late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').innerHTML = `${part}, <b>explorer</b>`;
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' · ' +
+    now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+}
+tick();
+setInterval(tick, 10000);
+
+document.getElementById('shields').innerHTML = DATA.shields
+  ? `&#x1F6E1;&#xFE0F; Shields up &middot; <b>${DATA.blocked}</b> trackers blocked`
+  : '&#x1F6E1;&#xFE0F; Shields are down';
+
+// ---------- starfield ----------
+const sky = document.getElementById('sky');
+const ctx = sky.getContext('2d');
+let W, H, stars = [], meteors = [];
+let mx = 0, my = 0, px = 0, py = 0;
+
+function resize() {
+  const dpr = devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  sky.width = W * dpr; sky.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = Math.round(W * H / 2600);
+  stars = Array.from({ length: n }, () => ({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    z: Math.random() ** 2 * 0.9 + 0.1,          // depth: 0.1 (far) .. 1 (near)
+    tw: Math.random() * Math.PI * 2,
+    hue: Math.random() < 0.15 ? (Math.random() < 0.5 ? 265 : 190) : 0,
+  }));
+}
+addEventListener('resize', resize);
+addEventListener('mousemove', e => { mx = e.clientX / W - 0.5; my = e.clientY / H - 0.5; });
+resize();
+
+function frame(t) {
+  px += (mx - px) * 0.04; py += (my - py) * 0.04;
+  ctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    s.x -= s.z * 0.06;
+    if (s.x < -10) s.x = W + 10;
+    const x = s.x - px * 40 * s.z, y = s.y - py * 40 * s.z;
+    const alpha = 0.35 + 0.65 * s.z * (0.6 + 0.4 * Math.sin(t / 700 + s.tw));
+    const r = s.z * 1.6 + 0.2;
+    ctx.fillStyle = s.hue ? `hsla(${s.hue}, 90%, 80%, ${alpha})` : `rgba(255,255,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  if (Math.random() < 0.004 && meteors.length < 2) {
+    meteors.push({ x: Math.random() * W * 0.8 + W * 0.2, y: Math.random() * H * 0.4, life: 1 });
+  }
+  for (const m of meteors) {
+    const len = 140;
+    const g = ctx.createLinearGradient(m.x, m.y, m.x + len, m.y - len * 0.45);
+    g.addColorStop(0, `rgba(255,255,255,${m.life})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + len, m.y - len * 0.45); ctx.stroke();
+    m.x -= 9; m.y += 4; m.life -= 0.018;
+  }
+  meteors = meteors.filter(m => m.life > 0);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

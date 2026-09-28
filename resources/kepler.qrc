@@ -1,0 +1,36 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/kepler">
+    <file>logo-icon.png</file>
+    <file>icons/back.svg</file>
+    <file>icons/bookmark.svg</file>
+    <file>icons/chevron-down.svg</file>
+    <file>icons/chevron-up.svg</file>
+    <file>icons/clock.svg</file>
+    <file>icons/close-hover.svg</file>
+    <file>icons/close-small.svg</file>
+    <file>icons/download-active.svg</file>
+    <file>icons/download.svg</file>
+    <file>icons/folder.svg</file>
+    <file>icons/forward.svg</file>
+    <file>icons/globe.svg</file>
+    <file>icons/home.svg</file>
+    <file>icons/lock.svg</file>
+    <file>icons/menu.svg</file>
+    <file>icons/orbit.svg</file>
+    <file>icons/planet.svg</file>
+    <file>icons/plus.svg</file>
+    <file>icons/reload.svg</file>
+    <file>icons/search.svg</file>
+    <file>icons/shield-off.svg</file>
+    <file>icons/shield.svg</file>
+    <file>icons/star-filled.svg</file>
+    <file>icons/star.svg</file>
+    <file>icons/speaker-muted.svg</file>
+    <file>icons/speaker.svg</file>
+    <file>icons/stop.svg</file>
+    <file>icons/warning.svg</file>
+    <file>web/logo.png</file>
+    <file>web/start.html</file>
+    <file>web/history.html</file>
+</qresource>
+</RCC>
