@@ -979,29 +979,21 @@ void BrowserWindow::showEvent(QShowEvent *event)
     if (!m_macStyled) {
         m_macStyled = true;
         MacWindow::setup(this);
+        // The red/yellow/green buttons stay exactly where macOS puts them (like
+        // Chrome); the tabs move up into the title strip to sit beside them.
+        setStyleSheet(styleSheet() + QStringLiteral("QTabBar::tab { margin-top: 0px; }"));
         updateTopBarInset();
     }
-    QTimer::singleShot(0, this, &BrowserWindow::placeTrafficLights);
 #endif
-}
-
-void BrowserWindow::resizeEvent(QResizeEvent *event)
-{
-    QMainWindow::resizeEvent(event);
-    placeTrafficLights();
 }
 
 void BrowserWindow::changeEvent(QEvent *event)
 {
     QMainWindow::changeEvent(event);
 #ifdef Q_OS_MACOS
-    if (event->type() == QEvent::WindowStateChange || event->type() == QEvent::ActivationChange) {
-        // Mac animates into and out of full screen; settle before re-placing.
-        QTimer::singleShot(0, this, &BrowserWindow::placeTrafficLights);
-        QTimer::singleShot(400, this, [this] {
-            updateTopBarInset();
-            placeTrafficLights();
-        });
+    if (event->type() == QEvent::WindowStateChange) {
+        // Mac animates into and out of full screen; settle before measuring.
+        QTimer::singleShot(400, this, &BrowserWindow::updateTopBarInset);
     }
 #endif
 }
@@ -1012,13 +1004,5 @@ void BrowserWindow::updateTopBarInset()
     // Leave room for the red/yellow/green buttons, except in full screen where they hide.
     const bool fullScreen = isFullScreen() || MacWindow::isNativeFullScreen(this);
     m_topLayout->setContentsMargins(fullScreen ? 6 : MacWindow::TrafficLightsInset, 0, 10, 0);
-#endif
-}
-
-void BrowserWindow::placeTrafficLights()
-{
-#ifdef Q_OS_MACOS
-    if (m_macStyled && m_topBar->isVisible())
-        MacWindow::placeTrafficLights(this, 16, m_topBar->height());
 #endif
 }
