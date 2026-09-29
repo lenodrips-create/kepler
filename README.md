@@ -19,6 +19,17 @@
 - **Other tools:** save a page as PDF or MHTML, view source, DevTools (`F12`), fullscreen video, and site permission prompts.
 - **Search engines:** Google, DuckDuckGo, Bing or Brave (pick one in the menu).
 
+## Download
+
+Ready-made builds for every platform are on the **Releases** page (rebuilt automatically on every change):
+
+| Computer | File | How to install |
+| --- | --- | --- |
+| Mac (Intel) | `Kepler-mac-intel.zip` | Unzip, drag Kepler into Applications, right-click → Open the first time |
+| Mac (M1–M4) | `Kepler-mac-apple-silicon.zip` | Same as above |
+| Windows 10/11 | `Kepler-windows.zip` | Extract All, run `Kepler.exe` (More info → Run anyway if SmartScreen asks) |
+| Linux (Ubuntu 24.04+) | `Kepler-linux-amd64.deb` | `sudo apt install ./Kepler-linux-amd64.deb` |
+
 ## Building
 
 You need **Qt 6.4 or newer** with the **Qt WebEngine** and **Qt SVG** modules, **CMake 3.16+**, and a C++17 compiler.

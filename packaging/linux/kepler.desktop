@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=Kepler
+GenericName=Web Browser
+Comment=A web browser from another orbit
+Exec=Kepler %U
+Icon=kepler
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=Kepler
+Actions=new-window;secure-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=Kepler
+
+[Desktop Action secure-window]
+Name=New Secure Window
+Exec=Kepler --secure

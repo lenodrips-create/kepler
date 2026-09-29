@@ -1,0 +1,160 @@
+name: Build Kepler
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_NOTES: |
+    **Pick the download for your computer:**
+    - **Mac (Intel)** -> Kepler-mac-intel.zip
+    - **Mac (M1/M2/M3/M4)** -> Kepler-mac-apple-silicon.zip
+    - **Windows** -> Kepler-windows.zip
+    - **Linux (Ubuntu 24.04+, Debian-based)** -> Kepler-linux-amd64.deb
+
+    **Mac:** double-click the zip, drag Kepler into Applications, then right-click Kepler -> Open -> Open the first time.
+    **Windows:** right-click the zip -> Extract All, open the folder, double-click Kepler.exe. If Windows shows "Windows protected your PC", click More info -> Run anyway.
+    **Linux:** open a terminal in your Downloads folder and run `sudo apt install ./Kepler-linux-amd64.deb`. Kepler then appears in your app menu.
+
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: intel
+          - runner: macos-15
+            arch: apple-silicon
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: mac
+          target: desktop
+          arch: clang_64
+          modules: 'qtwebengine qtwebchannel qtpositioning'
+          cache: true
+
+      - name: Make Mac icon
+        run: |
+          mkdir kepler.iconset
+          for s in 16 32 128 256 512; do
+            sips -z $s $s resources/logo-icon.png --out kepler.iconset/icon_${s}x${s}.png
+            d=$((s*2))
+            sips -z $d $d resources/logo-icon.png --out kepler.iconset/icon_${s}x${s}@2x.png
+          done
+          iconutil -c icns kepler.iconset -o resources/kepler.icns
+
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j3
+
+      - name: Package
+        run: |
+          macdeployqt build/Kepler.app -always-overwrite
+          codesign --force --deep --sign - build/Kepler.app
+          mkdir dist
+          ditto -c -k --keepParent build/Kepler.app dist/Kepler-mac-${{ matrix.arch }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kepler-mac-${{ matrix.arch }}
+          path: dist/*.zip
+
+      - name: Publish download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Kepler (latest build)
+          body: ${{ env.RELEASE_NOTES }}
+          files: dist/*.zip
+          make_latest: true
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: 'qtwebengine qtwebchannel qtpositioning'
+          cache: true
+
+      - name: Set up Visual Studio compiler
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/Kepler | Out-Null
+          Copy-Item build/Release/Kepler.exe dist/Kepler/
+          windeployqt --release --no-translations --compiler-runtime dist/Kepler/Kepler.exe
+          Compress-Archive -Path dist/Kepler -DestinationPath dist/Kepler-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kepler-windows
+          path: dist/Kepler-windows.zip
+
+      - name: Publish download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Kepler (latest build)
+          body: ${{ env.RELEASE_NOTES }}
+          files: dist/Kepler-windows.zip
+          make_latest: true
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ qt6-base-dev qt6-webengine-dev qt6-svg-dev libgl1-mesa-dev
+
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j4
+
+      - name: Package
+        run: |
+          cd build && cpack -G DEB
+          mkdir -p ../dist && cp kepler_*_amd64.deb ../dist/Kepler-linux-amd64.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kepler-linux
+          path: dist/Kepler-linux-amd64.deb
+
+      - name: Publish download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Kepler (latest build)
+          body: ${{ env.RELEASE_NOTES }}
+          files: dist/Kepler-linux-amd64.deb
+          make_latest: true

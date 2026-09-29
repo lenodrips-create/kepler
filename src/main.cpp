@@ -27,16 +27,20 @@ int main(int argc, char *argv[])
     Theme::applyPalette();
     app.setStyleSheet(Theme::styleSheet());
 
-    Browser browser;
-    BrowserWindow *window = browser.createWindow(false);
-
     // kepler https://example.com other.org   -> opens those
+    // kepler --secure                        -> starts in Secure browsing
     // kepler                                 -> restores last session (or the start page)
+    const QStringList args = app.arguments().mid(1);
+    const bool secure = args.contains(QStringLiteral("--secure"));
+
+    Browser browser;
+    BrowserWindow *window = browser.createWindow(secure);
+
     QStringList urls;
-    for (const QString &arg : app.arguments().mid(1))
+    for (const QString &arg : args)
         if (!arg.startsWith('-'))
             urls << arg;
-    if (urls.isEmpty())
+    if (urls.isEmpty() && !secure)
         urls = Storage::instance().sessionUrls();
 
     for (const QString &u : urls)

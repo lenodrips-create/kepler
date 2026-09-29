@@ -61,3 +61,21 @@ set_target_properties(Kepler PROPERTIES
     MACOSX_BUNDLE_ICON_FILE "kepler.icns")
 
 install(TARGETS Kepler BUNDLE DESTINATION . RUNTIME DESTINATION bin)
+
+# Linux: app menu entry + icon, and a .deb package (cpack -G DEB)
+if(UNIX AND NOT APPLE)
+    install(FILES packaging/linux/kepler.desktop DESTINATION share/applications)
+    install(FILES resources/logo-icon.png DESTINATION share/icons/hicolor/512x512/apps RENAME kepler.png)
+
+    set(CPACK_PACKAGE_NAME "kepler")
+    set(CPACK_PACKAGE_VENDOR "Kepler")
+    set(CPACK_PACKAGE_CONTACT "Kepler <noreply@kepler.app>")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "web")
+    set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    # Plugins Qt loads at runtime (SVG icons, the web engine helper process)
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6svg6, libqt6webenginecore6-bin")
+    include(CPack)
+endif()
