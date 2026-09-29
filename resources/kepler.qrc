@@ -31,6 +31,11 @@
     <file>icons/speaker.svg</file>
     <file>icons/stop.svg</file>
     <file>icons/warning.svg</file>
+    <file>ai/claude.png</file>
+    <file>ai/chatgpt.png</file>
+    <file>ai/gemini.png</file>
+    <file>ai/copilot.png</file>
+    <file>ai/perplexity.png</file>
     <file>web/logo.png</file>
     <file>web/start.html</file>
     <file>web/history.html</file>
