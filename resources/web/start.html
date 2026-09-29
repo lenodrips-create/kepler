@@ -164,7 +164,6 @@
 </main>
 <footer>
   <div class="pill" id="shields"></div>
-  <div class="pill" id="clock"></div>
 </footer>
 
 <script>
@@ -217,18 +216,15 @@ for (const t of DATA.tiles) {
   tiles.append(a);
 }
 
-// ---------- clock & greeting ----------
+// ---------- greeting ----------
 function tick() {
   const now = new Date();
   const h = now.getHours();
   const part = h < 5 ? 'Stargazing late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   document.getElementById('greeting').innerHTML = `${part}, <b>explorer</b>`;
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' · ' +
-    now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 }
 tick();
-setInterval(tick, 10000);
+setInterval(tick, 60000);
 
 document.getElementById('shields').innerHTML = DATA.shields
   ? `&#x1F6E1;&#xFE0F; Shields up &middot; <b>${DATA.blocked}</b> trackers blocked`
