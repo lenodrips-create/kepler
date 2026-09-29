@@ -28,6 +28,12 @@ public:
 
     DownloadsPanel *downloads() const { return m_downloads; }
 
+    // The start page's Normal / Secure switch.
+    void switchMode(bool secure);
+
+    // Opens this computer's own terminal app.
+    static void openTerminal(QWidget *parent);
+
     // Turns whatever was typed in the omnibox into somewhere to go.
     static QUrl urlFromInput(const QString &input);
 

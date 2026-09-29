@@ -2,13 +2,23 @@
 
 #include <QMutexLocker>
 
+std::atomic_int Shields::s_total{0};
+QMutex Shields::s_mutex;
+QHash<QString, int> Shields::s_perSite;
+
 Shields *Shields::instance()
 {
-    static Shields *s = new Shields;
+    static Shields *s = new Shields(false);
     return s;
 }
 
-Shields::Shields()
+Shields *Shields::secureInstance()
+{
+    static Shields *s = new Shields(true);
+    return s;
+}
+
+Shields::Shields(bool secure) : m_secure(secure)
 {
     // Well-known ad networks, trackers and analytics beacons.
     static const char *const list[] = {
@@ -53,8 +63,21 @@ bool Shields::isTracker(QString host) const
 
 void Shields::interceptRequest(QWebEngineUrlRequestInfo &info)
 {
-    if (!m_enabled)
+    if (m_secure) {
+        // HTTPS-only: quietly upgrade plain http (local addresses excepted).
+        QUrl url = info.requestUrl();
+        const QString host = url.host();
+        if (url.scheme() == QLatin1String("http") && host != QLatin1String("localhost")
+            && !host.startsWith(QLatin1String("127.")) && !host.startsWith(QLatin1String("192.168."))) {
+            url.setScheme(QStringLiteral("https"));
+            if (url.port() == 80)
+                url.setPort(-1);
+            info.redirect(url);
+            return;
+        }
+    } else if (!m_enabled) {
         return;
+    }
     // Never block what the user explicitly navigated to.
     if (info.resourceType() == QWebEngineUrlRequestInfo::ResourceTypeMainFrame)
         return;
@@ -68,16 +91,16 @@ void Shields::interceptRequest(QWebEngineUrlRequestInfo &info)
         return; // visiting the tracker's own site on purpose
 
     info.block(true);
-    ++m_total;
+    ++s_total;
     {
-        QMutexLocker lock(&m_mutex);
-        ++m_perSite[site];
+        QMutexLocker lock(&s_mutex);
+        ++s_perSite[site];
     }
     emit blocked(site);
 }
 
 int Shields::blockedOn(const QString &siteHost) const
 {
-    QMutexLocker lock(&m_mutex);
-    return m_perSite.value(siteHost.toLower());
+    QMutexLocker lock(&s_mutex);
+    return s_perSite.value(siteHost.toLower());
 }

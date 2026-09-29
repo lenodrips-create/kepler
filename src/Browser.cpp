@@ -7,6 +7,9 @@
 #include "Storage.h"
 
 #include <QApplication>
+#include <QMessageBox>
+#include <QProcess>
+#include <QWebEngineCookieStore>
 #include <QDir>
 #include <QRegularExpression>
 #include <QStandardPaths>
@@ -64,8 +67,18 @@ void Browser::setupProfile(QWebEngineProfile *profile, bool orbit)
     ua.remove(QRegularExpression(QStringLiteral("QtWebEngine/[\\d.]+ ")));
     profile->setHttpUserAgent(ua + QStringLiteral(" Kepler/" KEPLER_VERSION));
 
-    profile->installUrlSchemeHandler("kepler", new SchemeHandler(orbit, profile));
-    profile->setUrlRequestInterceptor(Shields::instance());
+    auto *handler = new SchemeHandler(orbit, profile);
+    profile->installUrlSchemeHandler("kepler", handler);
+    connect(handler, &SchemeHandler::modeRequested, this, &Browser::switchMode, Qt::QueuedConnection);
+
+    if (orbit) {
+        // Secure browsing: every tracker blocked, https only, no cross-site cookies.
+        profile->setUrlRequestInterceptor(Shields::secureInstance());
+        profile->cookieStore()->setCookieFilter(
+            [](const QWebEngineCookieStore::FilterRequest &request) { return !request.thirdParty; });
+    } else {
+        profile->setUrlRequestInterceptor(Shields::instance());
+    }
     profile->setDownloadPath(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
     profile->settings()->setAttribute(QWebEngineSettings::ScreenCaptureEnabled, true);
 
@@ -83,6 +96,52 @@ BrowserWindow *Browser::createWindow(bool orbit)
     m_windows.append(w);
     connect(w, &QObject::destroyed, this, [this, w] { m_windows.removeOne(w); });
     return w;
+}
+
+void Browser::switchMode(bool secure)
+{
+    BrowserWindow *from = activeWindow();
+    if (from && from->isOrbit() == secure)
+        return;
+
+    BrowserWindow *to = createWindow(secure);
+    to->newTab();
+    if (from) {
+        to->setGeometry(from->geometry());
+        if (from->isMaximized())
+            to->setWindowState(Qt::WindowMaximized);
+    }
+    to->show();
+    to->activateWindow();
+
+    // Nothing open but start pages? Then this is a straight switch.
+    if (from && from->sessionUrls().isEmpty())
+        from->close();
+}
+
+void Browser::openTerminal(QWidget *parent)
+{
+    const QString home = QDir::homePath();
+    bool ok = false;
+#if defined(Q_OS_MACOS)
+    ok = QProcess::startDetached(QStringLiteral("open"), {QStringLiteral("-a"), QStringLiteral("Terminal"), home});
+#elif defined(Q_OS_WIN)
+    const QString wt = QStandardPaths::findExecutable(QStringLiteral("wt.exe"));
+    ok = !wt.isEmpty() ? QProcess::startDetached(wt, {QStringLiteral("-d"), home})
+                       : QProcess::startDetached(QStringLiteral("cmd.exe"), {}, home);
+#else
+    static const char *const terminals[] = {"x-terminal-emulator", "gnome-terminal", "konsole",
+                                            "xfce4-terminal", "kitty", "alacritty", "xterm"};
+    for (const char *t : terminals) {
+        const QString path = QStandardPaths::findExecutable(QString::fromLatin1(t));
+        if (!path.isEmpty() && QProcess::startDetached(path, {}, home)) {
+            ok = true;
+            break;
+        }
+    }
+#endif
+    if (!ok)
+        QMessageBox::warning(parent, tr("Terminal"), tr("Kepler couldn't find a terminal app to open."));
 }
 
 BrowserWindow *Browser::activeWindow() const

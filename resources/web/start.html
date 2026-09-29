@@ -137,6 +137,31 @@
     background: var(--glass); border: 1px solid var(--edge);
   }
   footer .pill b { color: var(--a2); }
+  .mode {
+    display: flex;
+    padding: 4px;
+    border-radius: 99px;
+    background: rgba(20, 20, 34, 0.7);
+    border: 1px solid var(--edge);
+    margin-bottom: 6px;
+  }
+  .mode a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 18px;
+    border-radius: 99px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: color .15s, background .15s;
+  }
+  .mode a:hover { color: var(--text); }
+  .mode a.on {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(var(--a1rgb), 0.9), rgba(var(--a2rgb), 0.75));
+    box-shadow: 0 0 22px -6px var(--a1);
+  }
+  .mode svg { width: 16px; height: 16px; }
   .orbit-banner {
     display: none;
     padding: 8px 16px; border-radius: 99px;
@@ -144,15 +169,26 @@
     color: #f5d0fe; font-size: 13px;
   }
   body.orbit .orbit-banner { display: block; }
+  body.orbit .greeting { display: none; }
 </style>
 </head>
 <body>
 <canvas id="sky"></canvas>
 <main>
+  <nav class="mode">
+    <a id="mode-normal" href="kepler://mode/normal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
+      Normal browsing
+    </a>
+    <a id="mode-secure" href="kepler://mode/secure">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.1-7.5 9.5-4.3-1.4-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>
+      Secure browsing
+    </a>
+  </nav>
   <img class="logo" src="kepler://assets/logo.png" alt="">
   <h1>KEPLER</h1>
   <div class="greeting" id="greeting"></div>
-  <div class="orbit-banner">&#x1FA90; Orbit mode &mdash; nothing you do in this window is saved</div>
+  <div class="orbit-banner">&#x1F512; Secure browsing &mdash; private, HTTPS-only, every tracker blocked, nothing saved</div>
   <form id="search" autocomplete="off">
     <div class="field">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8b8d0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
@@ -170,6 +206,7 @@
 const DATA = {{DATA}};
 
 if (DATA.orbit) document.body.classList.add('orbit');
+document.getElementById(DATA.orbit ? 'mode-secure' : 'mode-normal').classList.add('on');
 
 // ---------- search ----------
 const q = document.getElementById('q');

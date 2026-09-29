@@ -6,6 +6,7 @@
 //   kepler://start    - the new tab page
 //   kepler://history  - browsing history
 //   kepler://assets/* - images used by those pages
+//   kepler://mode/*   - the Normal / Secure browsing switch
 class SchemeHandler : public QWebEngineUrlSchemeHandler
 {
     Q_OBJECT
@@ -17,6 +18,10 @@ public:
     static void registerScheme();
 
     void requestStarted(QWebEngineUrlRequestJob *job) override;
+
+signals:
+    // From the start page's switch: kepler://mode/secure or kepler://mode/normal
+    void modeRequested(bool secure);
 
 private:
     QByteArray startPage() const;

@@ -130,6 +130,18 @@ QToolButton::menu-indicator {
     border-color: #e8795a;
     color: #ffffff;
 }
+#TerminalButton {
+    color: #d7f5e4;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 11px 5px 8px;
+    border: 1px solid #243a30;
+    border-radius: 14px;
+}
+#TerminalButton:hover {
+    background: #16261f;
+    border-color: #3f6b55;
+}
 #AiPanel {
     background: #12121c;
     border: 1px solid #2f2f48;

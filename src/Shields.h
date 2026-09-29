@@ -15,6 +15,8 @@ class Shields : public QWebEngineUrlRequestInterceptor
 
 public:
     static Shields *instance();
+    // Secure browsing: always on, and upgrades plain http pages to https.
+    static Shields *secureInstance();
 
     void interceptRequest(QWebEngineUrlRequestInfo &info) override;
 
@@ -22,18 +24,21 @@ public:
     bool isEnabled() const { return m_enabled; }
 
     int blockedOn(const QString &siteHost) const;
-    int totalBlocked() const { return m_total; }
+    int totalBlocked() const { return s_total; }
 
 signals:
     void blocked(const QString &siteHost);
 
 private:
-    Shields();
+    explicit Shields(bool secure);
     bool isTracker(QString host) const;
 
+    const bool m_secure;
     QSet<QString> m_domains;
     std::atomic_bool m_enabled{true};
-    std::atomic_int m_total{0};
-    mutable QMutex m_mutex;
-    QHash<QString, int> m_perSite;
+
+    // Counts are shared by the normal and secure blockers.
+    static std::atomic_int s_total;
+    static QMutex s_mutex;
+    static QHash<QString, int> s_perSite;
 };

@@ -101,10 +101,11 @@ BrowserWindow::BrowserWindow(bool orbit)
         // Several logos can land at once; rebuild once they have.
         QTimer::singleShot(150, this, &BrowserWindow::rebuildBookmarksBar);
     });
-    connect(Shields::instance(), &Shields::blocked, this, [this](const QString &site) {
-        if (WebView *v = currentView(); v && v->url().host().toLower() == site)
-            updateShields();
-    }, Qt::QueuedConnection);
+    connect(m_orbit ? Shields::secureInstance() : Shields::instance(), &Shields::blocked, this,
+            [this](const QString &site) {
+                if (WebView *v = currentView(); v && v->url().host().toLower() == site)
+                    updateShields();
+            }, Qt::QueuedConnection);
 
     auto *downloads = Browser::instance().downloads();
     connect(downloads, &DownloadsPanel::activeCountChanged, this, &BrowserWindow::updateDownloadsButton);
@@ -172,9 +173,10 @@ void BrowserWindow::buildUi()
     top->addStretch(1);
 
     if (m_orbit) {
-        auto *badge = new QLabel(tr("ORBIT"), m_topBar);
+        auto *badge = new QLabel(tr("SECURE"), m_topBar);
         badge->setObjectName("OrbitBadge");
-        badge->setToolTip(tr("Private window: history, cookies and site data are forgotten when it closes"));
+        badge->setToolTip(tr("Secure browsing: private, HTTPS-only, every tracker blocked, "
+                             "and everything is forgotten when the window closes"));
         top->addWidget(badge, 0, Qt::AlignVCenter);
     }
 
@@ -210,6 +212,11 @@ void BrowserWindow::buildUi()
     m_aiButton->setText(tr("AI"));
     m_aiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_aiButton->setCheckable(true);
+    auto *terminal = toolButton(m_navBar, "terminal", tr("Open Terminal"));
+    terminal->setObjectName("TerminalButton");
+    terminal->setText(tr("Terminal"));
+    terminal->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    connect(terminal, &QToolButton::clicked, this, [this] { Browser::openTerminal(this); });
     m_downloadsButton = toolButton(m_navBar, "download", tr("Downloads (Ctrl+J)"));
     auto *menuButton = toolButton(m_navBar, "menu", tr("Menu"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
@@ -224,6 +231,7 @@ void BrowserWindow::buildUi()
     nav->addWidget(m_zoom);
     nav->addSpacing(4);
     nav->addWidget(m_aiButton);
+    nav->addWidget(terminal);
     nav->addWidget(m_shields);
     nav->addWidget(m_downloadsButton);
     nav->addWidget(menuButton);
@@ -383,7 +391,7 @@ QMenu *BrowserWindow::buildMainMenu()
         w->newTab();
         w->show();
     });
-    item("orbit", tr("New Orbit window (private)"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_N), [] {
+    item("orbit", tr("New secure window"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_N), [] {
         auto *w = Browser::instance().createWindow(true);
         w->newTab();
         w->show();
@@ -463,7 +471,7 @@ void BrowserWindow::rebuildBookmarksBar()
             connect(button, &QWidget::customContextMenuRequested, this, [this, button, url, raw](const QPoint &p) {
                 QMenu m(this);
                 m.addAction(tr("Open in new tab"), this, [this, url] { newTab(url); });
-                m.addAction(tr("Open in Orbit window"), this, [url] {
+                m.addAction(tr("Open in secure window"), this, [url] {
                     auto *w = Browser::instance().createWindow(true);
                     w->newTab(url);
                     w->show();
@@ -724,7 +732,7 @@ void BrowserWindow::updateUrlBar()
 void BrowserWindow::updateTitle()
 {
     WebView *view = currentView();
-    const QString app = m_orbit ? tr("Kepler Orbit") : QStringLiteral("Kepler");
+    const QString app = m_orbit ? tr("Kepler Secure") : QStringLiteral("Kepler");
     const QString title = view ? view->title() : QString();
     if (!view || title.isEmpty() || WebView::isStartPage(view->url()))
         setWindowTitle(app);
@@ -765,7 +773,7 @@ void BrowserWindow::updateZoom()
 void BrowserWindow::updateShields()
 {
     WebView *view = currentView();
-    const bool on = Storage::instance().shieldsEnabled();
+    const bool on = m_orbit || Storage::instance().shieldsEnabled(); // always on in secure windows
     m_shields->setIcon(icon(on ? "shield" : "shield-off"));
     const int count = view && on ? Shields::instance()->blockedOn(view->url().host()) : 0;
     m_shields->setText(count > 0 ? QString::number(count) : QString());

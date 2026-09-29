@@ -65,6 +65,11 @@ void SchemeHandler::requestStarted(QWebEngineUrlRequestJob *job)
         body = startPage();
     } else if (host == QLatin1String("history")) {
         body = historyPage();
+    } else if (host == QLatin1String("mode")) {
+        const bool secure = url.path() == QLatin1String("/secure");
+        if (secure != m_orbit)
+            emit modeRequested(secure);
+        return job->redirect(QUrl(QStringLiteral("kepler://start")));
     } else if (host == QLatin1String("assets")) {
         const QString path = url.path().mid(1);
         if (path.contains(QLatin1String("..")))
