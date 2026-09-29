@@ -1,7 +1,6 @@
 #include "AiPanel.h"
 
 #include "BrowserWindow.h"
-#include "Favicons.h"
 #include "WebView.h"
 
 #include <QButtonGroup>
@@ -12,7 +11,6 @@
 #include <QPropertyAnimation>
 #include <QSettings>
 #include <QStackedWidget>
-#include <QStandardPaths>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -40,11 +38,10 @@ QIcon letterIcon(const QString &name, const QColor &color)
     return QIcon(pm);
 }
 
-bool haveLogo(const QUrl &url)
+// Real logos ship inside the app (resources/ai), so they show even offline.
+QString logoPath(const QString &name)
 {
-    const QString path = QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
-                         + "/favicons/" + url.host().toLower() + ".png";
-    return QFile::exists(path);
+    return QStringLiteral(":/kepler/ai/%1.png").arg(name.toLower());
 }
 
 } // namespace
@@ -148,7 +145,6 @@ AiPanel::AiPanel(QWebEngineProfile *profile, BrowserWindow *window, QWidget *par
         hidePanel();
     });
     connect(hide, &QToolButton::clicked, this, &AiPanel::hidePanel);
-    connect(&Favicons::instance(), &Favicons::iconReady, this, &AiPanel::refreshIcons);
 
     refreshIcons();
     QFrame::hide();
@@ -157,8 +153,8 @@ AiPanel::AiPanel(QWebEngineProfile *profile, BrowserWindow *window, QWidget *par
 void AiPanel::refreshIcons()
 {
     for (Assistant &a : m_assistants) {
-        const QIcon logo = Favicons::instance().icon(a.home); // starts the download if needed
-        a.pill->setIcon(haveLogo(a.home) ? logo : letterIcon(a.name, a.color));
+        const QString path = logoPath(a.name);
+        a.pill->setIcon(QFile::exists(path) ? QIcon(path) : letterIcon(a.name, a.color));
     }
 }
 
