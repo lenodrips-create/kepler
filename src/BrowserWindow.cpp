@@ -1,7 +1,7 @@
 #include "BrowserWindow.h"
 
 #include "Browser.h"
-#include "ClaudePanel.h"
+#include "AiPanel.h"
 #include "DownloadsPanel.h"
 #include "Favicons.h"
 #include "FindBar.h"
@@ -205,11 +205,11 @@ void BrowserWindow::buildUi()
     m_shields = toolButton(m_navBar, "shield", tr("Shields"));
     m_shields->setObjectName("ShieldButton");
     m_shields->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    m_claudeButton = toolButton(m_navBar, "sparkle", tr("Ask Claude (Ctrl+Shift+Space)"));
-    m_claudeButton->setObjectName("ClaudeButton");
-    m_claudeButton->setText(tr("Claude"));
-    m_claudeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    m_claudeButton->setCheckable(true);
+    m_aiButton = toolButton(m_navBar, "sparkle", tr("AI assistants (Ctrl+Shift+Space)"));
+    m_aiButton->setObjectName("AiButton");
+    m_aiButton->setText(tr("AI"));
+    m_aiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_aiButton->setCheckable(true);
     m_downloadsButton = toolButton(m_navBar, "download", tr("Downloads (Ctrl+J)"));
     auto *menuButton = toolButton(m_navBar, "menu", tr("Menu"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
@@ -223,7 +223,7 @@ void BrowserWindow::buildUi()
     nav->addWidget(m_urlBar, 1);
     nav->addWidget(m_zoom);
     nav->addSpacing(4);
-    nav->addWidget(m_claudeButton);
+    nav->addWidget(m_aiButton);
     nav->addWidget(m_shields);
     nav->addWidget(m_downloadsButton);
     nav->addWidget(menuButton);
@@ -257,7 +257,7 @@ void BrowserWindow::buildUi()
     m_statusBubble->hide();
 
     m_findBar = new FindBar(m_content);
-    m_claude = new ClaudePanel(m_profile, this, m_content);
+    m_ai = new AiPanel(m_profile, this, m_content);
 
     root->addWidget(m_topBar);
     root->addWidget(m_navBar);
@@ -294,8 +294,8 @@ void BrowserWindow::buildUi()
     connect(m_zoom, &QToolButton::clicked, this, [this] { setZoom(1.0); });
     connect(m_shields, &QToolButton::clicked, this, &BrowserWindow::showShieldsMenu);
     connect(m_downloadsButton, &QToolButton::clicked, this, &BrowserWindow::showDownloads);
-    connect(m_claudeButton, &QToolButton::clicked, m_claude, &ClaudePanel::toggle);
-    connect(m_claude, &ClaudePanel::openChanged, m_claudeButton, &QToolButton::setChecked);
+    connect(m_aiButton, &QToolButton::clicked, m_ai, &AiPanel::toggle);
+    connect(m_ai, &AiPanel::openChanged, m_aiButton, &QToolButton::setChecked);
 }
 
 void BrowserWindow::buildActions()
@@ -359,7 +359,7 @@ void BrowserWindow::buildActions()
                 if (ZoomSteps[i] < v->zoomFactor() - 0.001) { setZoom(ZoomSteps[i]); break; }
     });
     add({QKeySequence(Qt::CTRL | Qt::Key_0)}, [this] { setZoom(1.0); });
-    add({QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Space)}, [this] { m_claude->toggle(); });
+    add({QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Space)}, [this] { m_ai->toggle(); });
 }
 
 QMenu *BrowserWindow::buildMainMenu()
@@ -818,7 +818,7 @@ void BrowserWindow::handleFullScreen(QWebEngineFullScreenRequest request)
     request.accept();
     const bool on = request.toggleOn();
     if (on)
-        m_claude->hidePanel();
+        m_ai->hidePanel();
     m_topBar->setVisible(!on);
     m_navBar->setVisible(!on);
     m_progress->setVisible(!on);
@@ -837,7 +837,7 @@ void BrowserWindow::positionOverlays()
         m_statusBubble->move(8, r.height() - m_statusBubble->height() - 8);
     m_findBar->adjustSize();
     m_findBar->move(r.width() - m_findBar->width() - 18, 12);
-    m_claude->reposition();
+    m_ai->reposition();
 }
 
 // ------------------------------------------------------------------- extras

@@ -12,7 +12,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network WebEngineCore 
 set(KEPLER_SOURCES
     src/main.cpp
     src/Browser.cpp            src/Browser.h
-    src/ClaudePanel.cpp        src/ClaudePanel.h
+    src/AiPanel.cpp            src/AiPanel.h
     src/MacWindow.h
     src/BrowserWindow.cpp      src/BrowserWindow.h
     src/WebView.cpp            src/WebView.h

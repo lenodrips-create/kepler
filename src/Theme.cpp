@@ -113,7 +113,7 @@ QToolButton::menu-indicator {
     font-weight: 600;
     padding: 5px 8px;
 }
-#ClaudeButton {
+#AiButton {
     color: #fcd9c4;
     font-size: 12px;
     font-weight: 600;
@@ -121,30 +121,48 @@ QToolButton::menu-indicator {
     border: 1px solid #3a2a2a;
     border-radius: 14px;
 }
-#ClaudeButton:hover {
+#AiButton:hover {
     background: #2a1d1c;
     border-color: #6b3f33;
 }
-#ClaudeButton:checked {
+#AiButton:checked {
     background: #3a2320;
     border-color: #e8795a;
     color: #ffffff;
 }
-#ClaudePanel {
+#AiPanel {
     background: #12121c;
     border: 1px solid #2f2f48;
     border-radius: 14px;
 }
-#ClaudeHeader {
+#AiHeader {
     background: #12121c;
     border-top-left-radius: 14px;
     border-top-right-radius: 14px;
     border-bottom: 1px solid #23233a;
 }
-#ClaudeTitle {
+#AiTitle {
     color: #f5f5ff;
     font-size: 14px;
     font-weight: 700;
+}
+#AiPill {
+    color: #b8b8d0;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px 4px 5px;
+    border: 1px solid #26263a;
+    border-radius: 13px;
+    background: #181826;
+}
+#AiPill:hover {
+    background: #1f1f31;
+    color: #f5f5ff;
+}
+#AiPill:checked {
+    background: #2a2140;
+    border-color: #8b5cf6;
+    color: #ffffff;
 }
 #OrbitBadge {
     color: #f5d0fe;

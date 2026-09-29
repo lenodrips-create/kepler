@@ -197,19 +197,21 @@ for (const t of DATA.tiles) {
   let hash = 0;
   for (const ch of t.url) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const hue = hash % 360;
-  // The site's real logo; a colored letter if it can't be fetched.
+  // A colored letter first; swapped for the site's real logo once it loads.
   const orb = document.createElement('div');
-  orb.className = 'logo-orb';
-  const img = document.createElement('img');
+  orb.className = 'orb';
+  orb.style.background = `radial-gradient(circle at 30% 25%, hsl(${hue} 90% 72%), hsl(${(hue + 40) % 360} 70% 38%))`;
+  orb.style.setProperty('--glow', `hsl(${hue} 90% 60%)`);
+  orb.textContent = (t.title || t.url).trim().charAt(0).toUpperCase();
+  const img = new Image();
   img.alt = '';
-  img.src = t.icon;
-  img.onerror = () => {
-    orb.className = 'orb';
-    orb.style.background = `radial-gradient(circle at 30% 25%, hsl(${hue} 90% 72%), hsl(${(hue + 40) % 360} 70% 38%))`;
-    orb.style.setProperty('--glow', `hsl(${hue} 90% 60%)`);
-    orb.textContent = (t.title || t.url).trim().charAt(0).toUpperCase();
+  img.onload = () => {
+    orb.className = 'logo-orb';
+    orb.removeAttribute('style');
+    orb.textContent = '';
+    orb.append(img);
   };
-  orb.append(img);
+  img.src = t.icon;
   const label = document.createElement('span');
   label.textContent = t.title || t.url;
   a.append(orb, label);

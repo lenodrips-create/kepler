@@ -3,7 +3,7 @@
 #include <QMainWindow>
 #include <QUrl>
 
-class ClaudePanel;
+class AiPanel;
 class FindBar;
 class QHBoxLayout;
 class QLabel;
@@ -99,8 +99,8 @@ private:
     QProgressBar *m_progress = nullptr;
     QLabel *m_statusBubble = nullptr;
     FindBar *m_findBar = nullptr;
-    ClaudePanel *m_claude = nullptr;
-    QToolButton *m_claudeButton = nullptr;
+    AiPanel *m_ai = nullptr;
+    QToolButton *m_aiButton = nullptr;
     QHBoxLayout *m_topLayout = nullptr;
     bool m_macStyled = false;
 
