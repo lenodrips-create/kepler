@@ -18,16 +18,26 @@ jobs:
       - name: Download logos
         run: |
           mkdir -p resources/ai
+          # Try the biggest logo first, then smaller sizes and other addresses.
           fetch() {
-            curl -fsSL -A "Mozilla/5.0" -o "resources/ai/$1.png" \
-              "https://www.google.com/s2/favicons?sz=128&domain=$2"
-            file "resources/ai/$1.png"
+            name=$1; shift
+            for domain in "$@"; do
+              for size in 128 96 64; do
+                if curl -fsSL -A "Mozilla/5.0" -o "resources/ai/$name.png" \
+                     "https://www.google.com/s2/favicons?sz=$size&domain=$domain"; then
+                  file "resources/ai/$name.png"
+                  return 0
+                fi
+              done
+            done
+            echo "::error::no logo found for $name"
+            return 1
           }
-          fetch claude claude.ai
-          fetch chatgpt chatgpt.com
+          fetch claude claude.ai anthropic.com
+          fetch chatgpt chatgpt.com openai.com
           fetch gemini gemini.google.com
-          fetch copilot copilot.microsoft.com
-          fetch perplexity www.perplexity.ai
+          fetch copilot copilot.microsoft.com copilot.cloud.microsoft bing.com
+          fetch perplexity www.perplexity.ai perplexity.ai
 
       - name: Save them to the repo
         run: |
